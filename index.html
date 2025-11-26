@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zenith - Organize Smarter</title>
+    <style>
+        /* =========================================
+           CSS VARIABLES & THEMES
+           ========================================= */
+        :root {
+            /* Modern Light (Default - Practical & Professional) */
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-color: #2563eb; /* Professional Blue */
+            --accent-hover: #1d4ed8;
+            --danger-color: #ef4444;
+            --success-color: #22c55e;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --modal-overlay: rgba(15, 23, 42, 0.6);
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --app-max-width: 600px;
+        }
+
+        [data-theme="dark"] {
+            /* Focus Dark (Reduced Eye Strain) */
+            --bg-color: #0f172a; /* Slate 900 */
+            --card-bg: #1e293b;  /* Slate 800 */
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent-color: #38bdf8; /* Sky Blue */
+            --accent-hover: #0ea5e9;
+            --border-color: #334155;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="nature"] {
+            /* Practical Nature (Calming) */
+            --bg-color: #f1f7f0;
+            --card-bg: #ffffff;
+            --text-main: #143616;
+            --text-muted: #587a5a;
+            --accent-color: #15803d; /* Green */
+            --accent-hover: #166534;
+            --border-color: #dcfce7;
+            --shadow: 0 4px 10px rgba(22, 101, 52, 0.08);
+        }
+
+        [data-theme="warm"] {
+            /* Warm/Sunset */
+            --bg-color: #fffaf5;
+            --card-bg: #ffffff;
+            --text-main: #431407;
+            --text-muted: #9a3412;
+            --accent-color: #ea580c; /* Orange */
+            --accent-hover: #c2410c;
+            --border-color: #fed7aa;
+            --shadow: 0 4px 10px rgba(234, 88, 12, 0.1);
+        }
+
+        /* =========================================
+           RESET & BASE STYLES
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Scroll handled in #app */
+        }
+
+        button {
+            font-family: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            background: none;
+        }
+
+        input, textarea, select {
+            font-family: inherit;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-main);
+            outline: none;
+        }
+
+        /* =========================================
+           LAYOUT & CONTAINER
+           ========================================= */
+        #app {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s ease;
+        }
+
+        /* Central Column Layout for larger screens */
+        .app-content-wrapper {
+            width: 100%;
+            max-width: var(--app-max-width);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-color);
+            position: relative;
+            /* Optional: Add borders only on very large screens to demarcate app area */
+            border-left: 1px solid transparent; 
+            border-right: 1px solid transparent;
+        }
+
+        @media (min-width: 650px) {
+            .app-content-wrapper {
+                border-color: var(--border-color);
+                box-shadow: 0 0 40px rgba(0,0,0,0.02);
+            }
+        }
+
+        /* =========================================
+           SCROLLABLE CONTENT AREA
+           ========================================= */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 100px; /* Space for FAB */
+            
+            /* Custom Scrollbar for desktop niceness */
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-muted) transparent;
+        }
+        
+        .scroll-area::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scroll-area::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 3px;
+        }
+
+        /* =========================================
+           HEADER SECTION
+           ========================================= */
+        header {
+            padding: 20px 20px 10px;
+            background: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .brand h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--accent-color);
+            letter-spacing: -0.5px;
+        }
+
+        .brand p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .quote {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-top: 4px;
+            opacity: 0.8;
+            min-height: 1.2em;
+        }
+
+        .settings-btn {
+            padding: 8px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            font-size: 1.2rem;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-btn:hover { 
+            transform: rotate(45deg); 
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        /* =========================================
+           PROGRESS BAR & ALERTS
+           ========================================= */
+        .progress-container {
+            margin: 10px 20px;
+            height: 4px;
+            background-color: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-color);
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .alert-banner {
+            margin: 0 20px 15px;
+            padding: 12px 16px;
+            background-color: var(--card-bg);
+            border-left: 4px solid var(--danger-color);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+            display: none;
+            animation: slideInRight 0.3s ease;
+        }
+
+        /* =========================================
+           SEARCH & FILTERS
+           ========================================= */
+        .search-container {
+            padding: 0 20px 15px;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 14px 14px 14px 44px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #searchInput:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .filters-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 0 20px 15px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .filters-scroll::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .filter-chip.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+        }
+
+        /* =========================================
+           TASK LIST
+           ========================================= */
+        #taskList {
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .empty-icon {
+            font-size: 3rem;
+            opacity: 0.5;
+            margin-bottom: 10px;
+        }
+
+        .task-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            position: relative;
+            user-select: none;
+            border: 1px solid var(--border-color);
+        }
+
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.08);
+            border-color: var(--accent-color);
+        }
+
+        .task-card.completed {
+            opacity: 0.6;
+            background-color: rgba(0,0,0,0.01);
+        }
+
+        .task-card.completed .task-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-checkbox {
+            appearance: none;
+            min-width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 2px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .task-checkbox:checked {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .task-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .task-content {
+            flex: 1;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .task-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-main);
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-high { background-color: var(--danger-color); box-shadow: 0 0 5px var(--danger-color); }
+        .dot-medium { background-color: #f59e0b; }
+        .dot-low { background-color: var(--success-color); }
+
+        .task-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .reminder-badge {
+            color: var(--accent-color);
+            font-weight: 600;
+            background: rgba(37, 99, 235, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .expired-badge {
+            color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .task-description {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            padding-top: 12px;
+            border-top: 1px dashed var(--border-color);
+            display: none;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .task-card.expanded .task-description {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .task-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .action-btn {
+            padding: 6px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            opacity: 0.7;
+            transition: all 0.2s;
+        }
+
+        .task-card:hover .action-btn { opacity: 1; }
+        .action-btn:hover { background: var(--bg-color); color: var(--accent-color); }
+        .btn-delete:hover { color: var(--danger-color); background: rgba(239, 68, 68, 0.05); }
+
+        /* =========================================
+           FLOATING ACTION BUTTON
+           ========================================= */
+        .fab {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            background: var(--accent-color);
+            color: white;
+            font-size: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5);
+        }
+
+        /* =========================================
+           MODALS
+           ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        /* On desktop/large screens, center the modal */
+        @media (min-width: 650px) {
+            .modal-overlay {
+                align-items: center;
+            }
+            .modal-container {
+                border-radius: 24px !important;
+                max-width: 500px;
+                margin: 0 auto;
+                transform: translateY(20px) !important;
+            }
+            .modal-overlay.open .modal-container {
+                transform: translateY(0) !important;
+            }
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: var(--app-max-width);
+            border-radius: 24px 24px 0 0;
+            padding: 30px;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        }
+
+        .modal-overlay.open .modal-container {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            padding: 5px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .close-modal:hover { color: var(--danger-color); }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: border 0.2s;
+        }
+        .form-control:focus { border-color: var(--accent-color); }
+
+        .row-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .row-group .form-group {
+            flex: 1;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 10px;
+            transition: transform 0.1s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            background: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { border-color: var(--accent-color); color: var(--accent-color); }
+
+        /* Settings */
+        .settings-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+        }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .btn-danger {
+            background: #fef2f2;
+            color: var(--danger-color);
+            padding: 12px;
+            width: 100%;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1px solid #fee2e2;
+            margin-bottom: 10px;
+        }
+        .btn-danger:active { background: #fee2e2; }
+
+        /* =========================================
+           ANIMATIONS
+           ========================================= */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <!-- Content Wrapper centers the UI on desktop -->
+        <div class="app-content-wrapper">
+            
+            <!-- HEADER -->
+            <header>
+                <div class="header-top">
+                    <div class="brand">
+                        <h1>Zenith</h1>
+                        <p>Organize smarter.</p>
+                    </div>
+                    <button class="settings-btn" id="openSettingsBtn" aria-label="Settings">⚙️</button>
+                </div>
+                <div class="quote" id="dailyQuote">"The secret of getting ahead is getting started."</div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </header>
+
+            <!-- SCROLLABLE CONTENT -->
+            <div class="scroll-area">
+                
+                <!-- ALERTS -->
+                <div id="smartBanner" class="alert-banner">
+                    <span style="font-size: 1.2rem">⏰</span>
+                    <span id="smartBannerText">You have tasks due today!</span>
+                </div>
+
+                <!-- SEARCH -->
+                <div class="search-container">
+                    <div class="search-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Search tasks...">
+                    </div>
+                </div>
+
+                <!-- FILTERS -->
+                <div class="filters-scroll">
+                    <button class="filter-chip active" data-filter="all">All</button>
+                    <button class="filter-chip" data-filter="today">Today</button>
+                    <button class="filter-chip" data-filter="upcoming">Upcoming</button>
+                    <button class="filter-chip" data-filter="priority-high">High Priority</button>
+                    <button class="filter-chip" data-filter="completed">Done</button>
+                </div>
+
+                <!-- TASKS LIST -->
+                <div id="taskList">
+                    <!-- Tasks injected via JS -->
+                </div>
+            </div>
+
+            <!-- FAB -->
+            <button class="fab" id="fabAdd" aria-label="Add Task">+</button>
+
+        </div>
+
+        <!-- MODAL: ADD/EDIT TASK -->
+        <div class="modal-overlay" id="taskModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2 id="modalTitle">New Task</h2>
+                    <button class="close-modal" id="closeTaskModal">&times;</button>
+                </div>
+                <form id="taskForm">
+                    <input type="hidden" id="taskId">
+                    
+                    <div class="form-group">
+                        <label for="taskTitle">Task Title *</label>
+                        <input type="text" id="taskTitle" class="form-control" placeholder="E.g., Review Q4 Report" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskDesc">Notes (Optional)</label>
+                        <textarea id="taskDesc" class="form-control" rows="3" placeholder="Add details..."></textarea>
+                    </div>
+
+                    <div class="row-group">
+                        <div class="form-group">
+                            <label for="taskDate">Due Date</label>
+                            <input type="date" id="taskDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskPriority">Priority</label>
+                            <select id="taskPriority" class="form-control">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskReminder">🔔 Set Reminder</label>
+                        <input type="datetime-local" id="taskReminder" class="form-control">
+                        <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 5px; display: block;">
+                            You will receive a notification and sound alert.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="taskCategory">Category</label>
+                        <select id="taskCategory" class="form-control">
+                            <option value="Personal">Personal</option>
+                            <option value="Work">Work</option>
+                            <option value="Study">Study</option>
+                            <option value="Health">Health</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-block btn-primary" id="saveTaskBtn">Save Task</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL: SETTINGS -->
+        <div class="modal-overlay" id="settingsModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="close-modal" id="closeSettingsModal">&times;</button>
+                </div>
+                
+                <!-- Theme -->
+                <div class="settings-section">
+                    <h3>🎨 Appearance</h3>
+                    <div class="form-group">
+                        <label>Theme</label>
+                        <select id="themeSelector" class="form-control">
+                            <option value="light">Modern Light (Default)</option>
+                            <option value="dark">Focus Dark</option>
+                            <option value="nature">Practical Nature</option>
+                            <option value="warm">Warm Sunset</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="settings-section">
+                    <h3>🔔 Notifications</h3>
+                    <button class="btn-secondary btn-block" id="testNotifyBtn">Test Notification Sound</button>
+                </div>
+
+                <!-- Sort -->
+                <div class="settings-section">
+                    <h3>🔃 Sort Order</h3>
+                    <select id="sortSelector" class="form-control">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="date">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="custom">Custom (Drag & Drop)</option>
+                    </select>
+                </div>
+
+                <!-- Data -->
+                <div class="settings-section">
+                    <h3>💾 Data</h3>
+                    <button class="btn-secondary btn-block" id="exportBtn">Export Data (JSON)</button>
+                    <button class="btn-secondary btn-block" onclick="document.getElementById('importFile').click()">Import Data</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;">
+                </div>
+
+                <!-- Danger -->
+                <div class="settings-section">
+                    <h3 style="color: var(--danger-color)">⚠️ Danger Zone</h3>
+                    <button class="btn-danger" id="clearCompletedBtn">Clear Completed</button>
+                    <button class="btn-danger" id="deleteAllBtn">Reset App</button>
+                </div>
+
+                <div class="settings-section" style="text-align: center; color: var(--text-muted); font-size: 0.8rem; border: none;">
+                    <p>Zenith v1.2</p>
+                    <p id="statsDisplay">0 Tasks</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        /* =========================================
+           STATE & CONFIG
+           ========================================= */
+        let tasks = [];
+        let currentFilter = 'all';
+        let currentSort = 'newest';
+        let dragSrcEl = null;
+
+        const quotes = [
+            "The secret of getting ahead is getting started.",
+            "Don't watch the clock; do what it does. Keep going.",
+            "Action is the foundational key to all success.",
+            "Organize your life around your dreams.",
+            "Simplicity is the ultimate sophistication.",
+            "Small steps every day lead to big results."
+        ];
+
+        /* =========================================
+           DOM ELEMENTS
+           ========================================= */
+        const els = {
+            taskList: document.getElementById('taskList'),
+            progressBar: document.getElementById('progressBar'),
+            searchInput: document.getElementById('searchInput'),
+            smartBanner: document.getElementById('smartBanner'),
+            smartBannerText: document.getElementById('smartBannerText'),
+            dailyQuote: document.getElementById('dailyQuote'),
+            filterBtns: document.querySelectorAll('.filter-chip'),
+            themeSelector: document.getElementById('themeSelector'),
+            sortSelector: document.getElementById('sortSelector'),
+            statsDisplay: document.getElementById('statsDisplay'),
+            
+            // Modals
+            taskModal: document.getElementById('taskModal'),
+            settingsModal: document.getElementById('settingsModal'),
+            
+            // Form
+            taskForm: document.getElementById('taskForm'),
+            taskTitle: document.getElementById('taskTitle'),
+            taskDesc: document.getElementById('taskDesc'),
+            taskDate: document.getElementById('taskDate'),
+            taskPriority: document.getElementById('taskPriority'),
+            taskCategory: document.getElementById('taskCategory'),
+            taskReminder: document.getElementById('taskReminder'),
+            taskId: document.getElementById('taskId'),
+            modalTitle: document.getElementById('modalTitle'),
+            
+            // Buttons
+            fabAdd: document.getElementById('fabAdd'),
+            closeTaskModal: document.getElementById('closeTaskModal'),
+            saveTaskBtn: document.getElementById('saveTaskBtn'),
+            openSettingsBtn: document.getElementById('openSettingsBtn'),
+            closeSettingsModal: document.getElementById('closeSettingsModal'),
+            exportBtn: document.getElementById('exportBtn'),
+            importFile: document.getElementById('importFile'),
+            clearCompletedBtn: document.getElementById('clearCompletedBtn'),
+            deleteAllBtn: document.getElementById('deleteAllBtn'),
+            testNotifyBtn: document.getElementById('testNotifyBtn')
+        };
+
+        /* =========================================
+           INITIALIZATION
+           ========================================= */
+        function init() {
+            loadTasks();
+            loadSettings();
+            setRandomQuote();
+            setupEventListeners();
+            renderTasks();
+            updateProgress();
+            
+            // Check reminders immediately on load, then loop
+            checkReminders(); 
+            setInterval(checkReminders, 10000); // Check every 10s
+        }
+
+        function setupEventListeners() {
+            // Modals
+            els.fabAdd.addEventListener('click', () => openAddModal());
+            els.closeTaskModal.addEventListener('click', closeAddModal);
+            els.openSettingsBtn.addEventListener('click', openSettingsModal);
+            els.closeSettingsModal.addEventListener('click', closeSettingsModal);
+            
+            window.addEventListener('click', (e) => {
+                if(e.target === els.taskModal) closeAddModal();
+                if(e.target === els.settingsModal) closeSettingsModal();
+            });
+
+            // Form Submit
+            els.taskForm.addEventListener('submit', handleFormSubmit);
+
+            // Search
+            els.searchInput.addEventListener('input', () => renderTasks());
+
+            // Filters
+            els.filterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    els.filterBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderTasks();
+                });
+            });
+
+            // Settings
+            els.themeSelector.addEventListener('change', (e) => applyTheme(e.target.value));
+            els.sortSelector.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                sortTasks();
+                renderTasks();
+            });
+            els.exportBtn.addEventListener('click', exportTasks);
+            els.importFile.addEventListener('change', importTasks);
+            els.clearCompletedBtn.addEventListener('click', clearCompleted);
+            els.deleteAllBtn.addEventListener('click', deleteAll);
+            els.testNotifyBtn.addEventListener('click', () => {
+                requestNotificationPermission();
+                playNotificationSound();
+                if(navigator.vibrate) navigator.vibrate(200);
+            });
+        }
+
+        /* =========================================
+           CORE LOGIC
+           ========================================= */
+
+        function loadTasks() {
+            const stored = localStorage.getItem('zenith_v1') || localStorage.getItem('taskvault_v1');
+            if (stored) tasks = JSON.parse(stored);
+        }
+
+        function saveTasks() {
+            localStorage.setItem('zenith_v1', JSON.stringify(tasks));
+            updateProgress();
+            checkSmartBanner();
+            updateStats();
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if(els.taskReminder.value) {
+                requestNotificationPermission();
+            }
+
+            const task = {
+                id: els.taskId.value || Date.now().toString(),
+                title: els.taskTitle.value,
+                description: els.taskDesc.value,
+                dueDate: els.taskDate.value,
+                priority: els.taskPriority.value,
+                category: els.taskCategory.value,
+                reminder: els.taskReminder.value || null,
+                reminderFired: false,
+                completed: false,
+                order: els.taskId.value ? tasks.find(t => t.id === els.taskId.value).order : 0,
+                createdAt: els.taskId.value ? tasks.find(t => t.id === els.taskId.value).createdAt : Date.now()
+            };
+
+            if (els.taskId.value) {
+                const index = tasks.findIndex(t => t.id === els.taskId.value);
+                task.completed = tasks[index].completed;
+                // If reminder time updated to future, reset fired status
+                if (task.reminder && new Date(task.reminder) > new Date()) {
+                    task.reminderFired = false;
+                }
+                tasks[index] = task;
+            } else {
+                if(currentSort === 'custom') tasks.forEach(t => t.order++);
+                tasks.push(task);
+            }
+
+            saveTasks();
+            closeAddModal();
+            if(currentSort !== 'custom') sortTasks();
+            renderTasks();
+            checkReminders(); // Re-check immediately
+        }
+
+        function toggleComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function deleteTask(id) {
+            if(confirm("Delete this task?")) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            els.taskId.value = task.id;
+            els.taskTitle.value = task.title;
+            els.taskDesc.value = task.description;
+            els.taskDate.value = task.dueDate;
+            els.taskPriority.value = task.priority;
+            els.taskCategory.value = task.category;
+            els.taskReminder.value = task.reminder || '';
+            
+            els.modalTitle.textContent = "Edit Task";
+            els.saveTaskBtn.textContent = "Update Task";
+            
+            openAddModal();
+        }
+
+        /* =========================================
+           REMINDER & NOTIFICATION SYSTEM
+           ========================================= */
+        function requestNotificationPermission() {
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        }
+
+        function checkReminders() {
+            const now = new Date();
+            let changed = false;
+
+            tasks.forEach(task => {
+                if (task.reminder && !task.reminderFired && !task.completed) {
+                    const reminderTime = new Date(task.reminder);
+                    // If reminder time has passed
+                    if (now >= reminderTime) {
+                        triggerNotification(task);
+                        task.reminderFired = true;
+                        changed = true;
+                    }
+                }
+            });
+
+            if (changed) {
+                saveTasks();
+                renderTasks(); // Update UI to show expired status if needed
+            }
+        }
+
+        function triggerNotification(task) {
+            playNotificationSound();
+            
+            // Vibrate if mobile
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+            // Browser Notification
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(`Reminder: ${task.title}`, {
+                    body: `Time: ${new Date(task.reminder).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}\n${task.description || ''}`,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png',
+                    requireInteraction: true
+                });
+            } else {
+                // Fallback UI alert
+                const alertMsg = document.createElement('div');
+                alertMsg.style.cssText = `
+                    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+                    background: var(--accent-color); color: white; padding: 15px 25px;
+                    border-radius: 50px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    z-index: 2000; animation: slideInRight 0.5s ease; font-weight: bold;
+                    display: flex; align-items: center; gap: 10px;
+                `;
+                alertMsg.innerHTML = `<span>🔔</span> ${task.title}`;
+                document.body.appendChild(alertMsg);
+                setTimeout(() => alertMsg.remove(), 4000);
+            }
+        }
+
+        function playNotificationSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, ctx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.error("Audio play failed", e);
+            }
+        }
+
+        /* =========================================
+           RENDERING & FILTERING
+           ========================================= */
+        function getFilteredTasks() {
+            const query = els.searchInput.value.toLowerCase();
+            const today = new Date().toISOString().split('T')[0];
+
+            return tasks.filter(task => {
+                const matchesSearch = task.title.toLowerCase().includes(query) || 
+                                      task.description.toLowerCase().includes(query);
+                if (!matchesSearch) return false;
+
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'completed') return task.completed;
+                if (currentFilter === 'today') return task.dueDate === today && !task.completed;
+                if (currentFilter === 'upcoming') return task.dueDate && task.dueDate > today && !task.completed;
+                if (currentFilter.startsWith('priority-')) {
+                    const p = currentFilter.split('-')[1];
+                    return task.priority === p && !task.completed;
+                }
+                return true;
+            });
+        }
+
+        function sortTasks() {
+            if (currentSort === 'custom') {
+                tasks.sort((a, b) => a.order - b.order);
+                return;
+            }
+
+            tasks.sort((a, b) => {
+                if (currentSort === 'newest') return b.createdAt - a.createdAt;
+                if (currentSort === 'oldest') return a.createdAt - b.createdAt;
+                if (currentSort === 'priority') {
+                    const map = { high: 1, medium: 2, low: 3 };
+                    return map[a.priority] - map[b.priority];
+                }
+                if (currentSort === 'date') {
+                    // Sort by due date, nulls last
+                    if (!a.dueDate) return 1;
+                    if (!b.dueDate) return -1;
+                    return new Date(a.dueDate) - new Date(b.dueDate);
+                }
+                return 0;
+            });
+        }
+
+        function renderTasks() {
+            const filtered = getFilteredTasks();
+            els.taskList.innerHTML = '';
+
+            if (filtered.length === 0) {
+                els.taskList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <h3>No tasks found</h3>
+                        <p>Enjoy your free time!</p>
+                    </div>`;
+                return;
+            }
+
+            const draggable = currentSort === 'custom' && els.searchInput.value === '' && currentFilter === 'all';
+
+            filtered.forEach(task => {
+                const dateDisplay = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '';
+                
+                let reminderHtml = '';
+                if (task.reminder) {
+                    const rDate = new Date(task.reminder);
+                    const isExpired = new Date() > rDate;
+                    const timeStr = rDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    
+                    const badgeClass = isExpired && !task.completed ? 'reminder-badge expired-badge' : 'reminder-badge';
+                    const icon = isExpired && !task.completed ? '⚠️' : '⏰';
+                    
+                    reminderHtml = `<span class="${badgeClass}">${icon} ${timeStr}</span>`;
+                }
+
+                const card = document.createElement('div');
+                card.className = `task-card ${task.completed ? 'completed' : ''}`;
+                if (draggable) {
+                    card.setAttribute('draggable', 'true');
+                    card.dataset.id = task.id;
+                }
+                
+                card.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleComplete('${task.id}')">
+                    
+                    <div class="task-content" onclick="this.closest('.task-card').classList.toggle('expanded')">
+                        <div class="task-header">
+                            <span class="task-title">${escapeHtml(task.title)}</span>
+                            <span class="priority-dot dot-${task.priority}" title="Priority: ${task.priority}"></span>
+                        </div>
+                        <div class="task-meta">
+                            ${dateDisplay ? `<span class="meta-item">📅 ${dateDisplay}</span>` : ''}
+                            ${reminderHtml}
+                            <span class="meta-item">🏷️ ${task.category}</span>
+                        </div>
+                        <div class="task-description">${escapeHtml(task.description || 'No notes.')}</div>
+                    </div>
+
+                    <div class="task-actions">
+                        <button class="action-btn" onclick="event.stopPropagation(); editTask('${task.id}')">✏️</button>
+                        <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteTask('${task.id}')">✕</button>
+                    </div>
+                `;
+
+                if(draggable) addDnDHandlers(card);
+                els.taskList.appendChild(card);
+            });
+        }
+
+        /* =========================================
+           DRAG AND DROP
+           ========================================= */
+        function addDnDHandlers(card) {
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragover', handleDragOver);
+            card.addEventListener('dragenter', handleDragEnter);
+            card.addEventListener('dragleave', handleDragLeave);
+            card.addEventListener('drop', handleDrop);
+            card.addEventListener('dragend', handleDragEnd);
+        }
+
+        function handleDragStart(e) {
+            this.style.opacity = '0.4';
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            this.style.transform = 'scale(1.02)';
+            this.style.zIndex = '10';
+        }
+
+        function handleDragLeave(e) {
+            this.style.transform = 'scale(1)';
+            this.style.zIndex = '1';
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+
+            if (dragSrcEl !== this) {
+                const srcId = dragSrcEl.dataset.id;
+                const targetId = this.dataset.id;
+
+                const srcIndex = tasks.findIndex(t => t.id === srcId);
+                const targetIndex = tasks.findIndex(t => t.id === targetId);
+
+                const [movedTask] = tasks.splice(srcIndex, 1);
+                tasks.splice(targetIndex, 0, movedTask);
+
+                tasks.forEach((t, index) => t.order = index);
+                
+                saveTasks();
+                renderTasks();
+            }
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+            document.querySelectorAll('.task-card').forEach(item => item.style.transform = 'none');
+        }
+
+        /* =========================================
+           UTILS
+           ========================================= */
+        function updateProgress() {
+            if (tasks.length === 0) {
+                els.progressBar.style.width = '0%';
+                return;
+            }
+            const completed = tasks.filter(t => t.completed).length;
+            const percent = (completed / tasks.length) * 100;
+            els.progressBar.style.width = `${percent}%`;
+        }
+
+        function checkSmartBanner() {
+            const today = new Date().toISOString().split('T')[0];
+            const dueToday = tasks.filter(t => t.dueDate === today && !t.completed).length;
+            
+            if (dueToday > 0) {
+                els.smartBanner.style.display = 'flex';
+                els.smartBannerText.textContent = `${dueToday} task${dueToday > 1 ? 's' : ''} due today!`;
+            } else {
+                els.smartBanner.style.display = 'none';
+            }
+        }
+
+        function setRandomQuote() {
+            els.dailyQuote.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+        }
+
+        function updateStats() {
+            const completed = tasks.filter(t => t.completed).length;
+            els.statsDisplay.innerHTML = `Total: ${tasks.length} | Completed: ${completed}`;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        /* =========================================
+           MODAL & THEME
+           ========================================= */
+        function openAddModal() { els.taskModal.classList.add('open'); }
+        function closeAddModal() {
+            els.taskModal.classList.remove('open');
+            setTimeout(() => {
+                els.taskForm.reset();
+                els.taskId.value = '';
+                els.modalTitle.textContent = "New Task";
+                els.saveTaskBtn.textContent = "Save Task";
+            }, 300);
+        }
+        function openSettingsModal() {
+            updateStats();
+            els.settingsModal.classList.add('open');
+        }
+        function closeSettingsModal() { els.settingsModal.classList.remove('open'); }
+
+        function loadSettings() {
+            const theme = localStorage.getItem('zenith_theme') || localStorage.getItem('taskvault_theme') || 'light';
+            applyTheme(theme);
+            els.themeSelector.value = theme;
+        }
+
+        function applyTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('zenith_theme', themeName);
+        }
+
+        function exportTasks() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "zenith_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importTasks(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        if(confirm("Import tasks? Current data will be replaced.")) {
+                            tasks = imported;
+                            saveTasks();
+                            renderTasks();
+                        }
+                    }
+                } catch (err) { alert("Invalid file."); }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearCompleted() {
+            if(confirm("Delete all completed tasks?")) {
+                tasks = tasks.filter(t => !t.completed);
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function deleteAll() {
+            if(confirm("Permanently delete ALL tasks?")) {
+                tasks = [];
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        // Run
+        init();
+
+    </script>
+</body>
+</html>
